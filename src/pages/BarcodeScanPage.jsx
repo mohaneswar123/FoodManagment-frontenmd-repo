@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { fetchProduct, saveProductForUser } from '../api/productApi';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { BarcodeScanner } from 'react-qr-barcode-scanner';
+import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
 const BarcodeScanPage = ({ userId, isGuest = false }) => {
   const [barcode, setBarcode] = useState('');
@@ -141,12 +141,15 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
 
         {/* QR Scanner */}
         <div className="mb-4 sm:mb-6">
-          <BarcodeScanner
-            onUpdate={(error, result) => {
+         <BarcodeScannerComponent
+            width={300}
+            height={300}
+            onUpdate={(err, result) => {
               if (result) handleScanSuccess(result);
-              if (error) handleScanFail(error);
+              if (err) handleScanFail(err);
             }}
           />
+
         </div>
 
         {/* Form Submit */}
