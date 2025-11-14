@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import Table from '../components/Table.jsx';
-import { fetchProductsByUser, deleteProductForUser } from '../api/productApi';
+import { fetchAllProducts, fetchProductsByUser, deleteProductForUser } from '../api/productApi';
 
-const ProductListPage = ({ userId }) => {
+const ProductListPage = ({ userId, isGuest = false }) => {
 	const [products, setProducts] = useState([]);
 	const [errorMessage, setErrorMessage] = useState('');
 
 	useEffect(() => {
 		const fetchProducts = async () => {
 			try {
-				const productList = await fetchProductsByUser(userId);
+				const productList = isGuest ? await fetchAllProducts() : await fetchProductsByUser(userId);
 				setProducts(productList);
 				setErrorMessage('');
 			} catch (error) {
@@ -18,7 +18,7 @@ const ProductListPage = ({ userId }) => {
 			}
 		};
 		fetchProducts();
-	}, [userId]);
+	}, [userId, isGuest]);
 
 	const handleDelete = async (productId) => {
 		if (!window.confirm('Are you sure you want to delete this product?')) return;
@@ -36,7 +36,7 @@ const ProductListPage = ({ userId }) => {
 				<div className="flex justify-center mb-3 text-2xl sm:text-4xl">🍱</div>
 				<h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 text-amber-700 text-center">Your Food Pantry</h2>
 				{errorMessage && <p className="text-red-600 mb-3 sm:mb-4 text-center text-sm">{errorMessage}</p>}
-				<Table products={products} onDelete={handleDelete} />
+				<Table products={products} onDelete={handleDelete} readOnly={isGuest} />
 			</div>
 		</div>
 	);

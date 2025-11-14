@@ -4,7 +4,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import { QrReader } from 'react-qr-reader';
 
-const BarcodeScanPage = ({ userId }) => {
+const BarcodeScanPage = ({ userId, isGuest = false }) => {
   const [barcode, setBarcode] = useState('');
   const [expiry, setExpiry] = useState('');
   const [scanError, setScanError] = useState(false);
@@ -36,6 +36,10 @@ const BarcodeScanPage = ({ userId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isGuest) {
+      alert('Guest mode is read-only. Login to save items.');
+      return;
+    }
     if (!productDetails) {
       alert('Please fetch product details before submitting.');
       return;
@@ -142,8 +146,8 @@ const BarcodeScanPage = ({ userId }) => {
             onChange={setExpiry}
             required
           />
-          <Button type="submit" variant="success" size="large" className="w-full">
-            💾 Save Food Item
+          <Button type="submit" variant="success" size="large" className="w-full" disabled={isGuest}>
+            {isGuest ? '🔒 Read-only in Guest' : '💾 Save Food Item'}
           </Button>
         </form>
       </div>

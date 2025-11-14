@@ -7,6 +7,17 @@ function validateUserId(userId) {
   }
 }
 
+function assertNotGuest() {
+  try {
+    if (localStorage.getItem('guestMode') === '1') {
+      throw new Error('Guest mode is read-only. Please login to perform this action.');
+    }
+  } catch (e) {
+    // If localStorage not available, treat as read-only safeguard
+    throw new Error('Read-only mode: login required to perform this action.');
+  }
+}
+
 // Fetch all products
 export async function fetchAllProducts() {
   const res = await fetch(`${API_BASE}/products`);
@@ -24,6 +35,7 @@ export async function fetchProductsByUser(userId) {
 
 // Save a product for a specific user
 export async function saveProductForUser(userId, product) {
+  assertNotGuest();
   validateUserId(userId);
 
   // Format the product data to match the required structure
@@ -60,6 +72,7 @@ export async function saveProductForUser(userId, product) {
 
 // Delete a product for a specific user
 export async function deleteProductForUser(userId, productId) {
+  assertNotGuest();
   validateUserId(userId);
   const res = await fetch(`${API_BASE}/products/user/${userId}/${productId}`, {
     method: 'DELETE',
