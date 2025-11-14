@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { fetchProduct, saveProductForUser } from '../api/productApi';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import BarcodeScannerComponent from 'react-qr-barcode-scanner';
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 const BarcodeScanPage = ({ userId, isGuest = false }) => {
   const [barcode, setBarcode] = useState('');
@@ -19,7 +19,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
   };
 
   const handleScanFail = (error) => {
-    console.error('Error in handleScanFail:', error);
+    console.error('QR Scan Error:', error);
     setScanError(true);
   };
 
@@ -29,7 +29,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
       setProductDetails(product);
       setErrorMessage('');
     } catch (error) {
-      console.error('Error in handleFetchProduct:', error);
+      console.error('Fetch Error:', error);
       setErrorMessage(error.message);
     }
   };
@@ -44,6 +44,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
       alert('Please fetch product details before submitting.');
       return;
     }
+
     try {
       const formattedProductDetails = {
         barcode: productDetails.barcode || barcode,
@@ -64,7 +65,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
       setExpiry('');
       setProductDetails(null);
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      console.error('Submit Error:', error);
       alert('Failed to save product: ' + error.message);
     }
   };
@@ -72,6 +73,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-yellow-50 to-amber-50 p-2 sm:p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-3 sm:p-6 border-t-2 sm:border-t-4 border-red-500">
+        
         <div className="flex justify-center mb-3 text-2xl sm:text-4xl">🍽️</div>
         <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 text-amber-700 text-center">
           Scan Food Barcode
@@ -111,7 +113,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
           </Button>
         </div>
 
-        {/* Find Product */}
+        {/* Fetch Product */}
         <div className="mb-4 sm:mb-6">
           <Button type="button" onClick={handleFetchProduct} variant="primary" size="medium" className="w-full">
             🔍 Find Food Details
@@ -121,11 +123,13 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
 
           {/* Product Details */}
           {productDetails && (
-            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-white rounded-lg shadow border-l-2 sm:border-l-4 border-amber-500">
-              <h3 className="font-semibold text-amber-700 text-base sm:text-lg mb-2">🍽️ Food Details:</h3>
+            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-white rounded-lg shadow border-l-4 border-amber-500">
+              <h3 className="font-semibold text-amber-700 text-lg mb-2">🍽️ Food Details:</h3>
+
               <p className="mb-1"><span className="font-bold">🍴 Name:</span> {productDetails.product_name || 'N/A'}</p>
               <p className="mb-1"><span className="font-bold">🏷️ Brand:</span> {productDetails.brands || 'N/A'}</p>
               <p className="mb-1"><span className="font-bold">⚖️ Quantity:</span> {productDetails.quantity || 'N/A'}</p>
+
               <p className="mb-1 text-xs sm:text-sm"><span className="font-bold">📋 Ingredients:</span> {
                 Array.isArray(productDetails.ingredients)
                   ? productDetails.ingredients.map((ing, i) => (
@@ -133,6 +137,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
                     ))
                   : productDetails.ingredients_text || 'N/A'
               }</p>
+
               <p className="mb-1"><span className="font-bold">🔥 Calories/100g:</span> {productDetails.nutriments?.energy_100g || 'N/A'}</p>
               <p className="mb-1"><span className="font-bold">🍯 Sugar/100g:</span> {productDetails.nutriments?.sugars_100g || 'N/A'}</p>
             </div>
@@ -141,20 +146,23 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
 
         {/* QR Scanner */}
         <div className="mb-4 sm:mb-6">
-         <BarcodeScannerComponent
-            width={300}
-            height={300}
-            onUpdate={(err, result) => {
-              if (result) handleScanSuccess(result);
-              if (err) handleScanFail(err);
-            }}
+          <Scanner
+            onDecode={(result) => handleScanSuccess({ text: result })}
+            onError={handleScanFail}
+            constraints={{ facingMode: "environment" }}
+            className="w-full rounded-lg"
           />
-
         </div>
 
-        {/* Form Submit */}
+        {/* Save Form */}
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-          <Input label="Expiry Date" type="date" value={expiry} onChange={setExpiry} required />
+          <Input
+            label="Expiry Date"
+            type="date"
+            value={expiry}
+            onChange={setExpiry}
+            required
+          />
           <Button type="submit" variant="success" size="large" className="w-full" disabled={isGuest}>
             {isGuest ? '🔒 Read-only in Guest' : '💾 Save Food Item'}
           </Button>
