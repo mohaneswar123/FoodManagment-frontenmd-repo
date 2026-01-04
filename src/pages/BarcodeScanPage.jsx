@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { fetchProduct, saveProductForUser } from '../api/productApi';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { Scanner } from "@yudiel/react-qr-scanner";
+import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
 const BarcodeScanPage = ({ userId, isGuest = false }) => {
   const [barcode, setBarcode] = useState('');
@@ -15,6 +15,8 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
     if (result) {
       setBarcode(result.text);
       setScanError(false);
+      // Retrieve product details automatically when scanned? The user flow suggests explicit "Find Food Details" click. 
+      // Keeping it manual as per existing flow, just showing visual feedback.
     }
   };
 
@@ -73,7 +75,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-yellow-50 to-amber-50 p-2 sm:p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-3 sm:p-6 border-t-2 sm:border-t-4 border-red-500">
-        
+
         <div className="flex justify-center mb-3 text-2xl sm:text-4xl">🍽️</div>
         <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 text-amber-700 text-center">
           Scan Food Barcode
@@ -133,8 +135,8 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
               <p className="mb-1 text-xs sm:text-sm"><span className="font-bold">📋 Ingredients:</span> {
                 Array.isArray(productDetails.ingredients)
                   ? productDetails.ingredients.map((ing, i) => (
-                      <span key={i}>{ing.text}{i < productDetails.ingredients.length - 1 ? ', ' : ''}</span>
-                    ))
+                    <span key={i}>{ing.text}{i < productDetails.ingredients.length - 1 ? ', ' : ''}</span>
+                  ))
                   : productDetails.ingredients_text || 'N/A'
               }</p>
 
@@ -145,12 +147,29 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
         </div>
 
         {/* QR Scanner */}
-        <div className="mb-4 sm:mb-6">
-          <Scanner
-            onDecode={(result) => handleScanSuccess({ text: result })}
-            onError={handleScanFail}
-            constraints={{ facingMode: "environment" }}
-            className="w-full rounded-lg"
+        <div className="mb-4 sm:mb-6 relative">
+          <BarcodeScannerComponent
+            width="100%"
+            height="100%"
+            onUpdate={(err, result) => {
+              if (result) {
+                console.log('Scanner Result:', result);
+                const code = result.text || result.getText();
+                console.log('Detected Code:', code);
+
+                if (code && code !== barcode) {
+                  handleScanSuccess({ text: code });
+                }
+              } else if (err) {
+                // console.log("Scan Error:", err); // Optional: log errors if needed, but often noisy
+              }
+            }}
+            facingMode="environment"
+            videoConstraints={{
+              width: 1280,
+              height: 720,
+              facingMode: "environment"
+            }}
           />
         </div>
 
