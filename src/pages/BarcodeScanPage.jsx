@@ -252,7 +252,7 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
                     <div className={`absolute bottom-0 inset-x-0 h-1 ${getNutriscoreColor(productDetails.nutriscore_grade)}`}></div>
                   </div>
                   <div className="flex-1 min-w-0 py-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <span className="text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md">
                         {productDetails.brands || 'Unknown Brand'}
                       </span>
@@ -261,18 +261,50 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
                           Score {productDetails.nutriscore_grade.toUpperCase()}
                         </span>
                       )}
+                      {productDetails.nova_group && (
+                        <span className={`text-[10px] font-bold tracking-wider uppercase text-white px-2 py-0.5 rounded-md ${productDetails.nova_group === 1 ? 'bg-green-500' :
+                            productDetails.nova_group === 2 ? 'bg-yellow-500' :
+                              productDetails.nova_group === 3 ? 'bg-orange-500' : 'bg-red-500'
+                          }`}>
+                          NOVA {productDetails.nova_group}
+                        </span>
+                      )}
+                      {productDetails.ecoscore_grade && (
+                        <span className={`text-[10px] font-bold tracking-wider uppercase text-white px-2 py-0.5 rounded-md ${productDetails.ecoscore_grade === 'a' ? 'bg-green-600' :
+                            productDetails.ecoscore_grade === 'b' ? 'bg-green-500' :
+                              productDetails.ecoscore_grade === 'c' ? 'bg-yellow-500' :
+                                productDetails.ecoscore_grade === 'd' ? 'bg-orange-500' : 'bg-red-500'
+                          }`}>
+                          Eco {productDetails.ecoscore_grade.toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     <h2 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2 mb-1">
                       {productDetails.product_name || 'Unknown Product'}
                     </h2>
-                    <div className="text-sm text-gray-400 font-medium">
-                      {productDetails.quantity || '1 unit'}
+                    <div className="text-sm text-gray-400 font-medium flex gap-2">
+                      <span>{productDetails.quantity || '1 unit'}</span>
+                      {productDetails.serving_size && <span>• {productDetails.serving_size}</span>}
                     </div>
                   </div>
                 </div>
 
+                {/* Nutrient Levels Badges */}
+                {productDetails.nutrient_levels && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {Object.entries(productDetails.nutrient_levels).map(([key, level]) => (
+                      <span key={key} className={`text-[10px] font-bold uppercase px-2 py-1 rounded-lg border ${level === 'low' ? 'bg-green-50 border-green-100 text-green-700' :
+                          level === 'moderate' ? 'bg-yellow-50 border-yellow-100 text-yellow-700' :
+                            'bg-red-50 border-red-100 text-red-700'
+                        }`}>
+                        {key.replace(/-/g, ' ')}: {level}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {/* Stats Row */}
-                <div className="grid grid-cols-3 gap-3 mb-8">
+                <div className="grid grid-cols-3 gap-3 mb-6">
                   {[
                     { label: 'Calories', val: productDetails.nutriments?.energy_value, unit: 'kcal', color: 'text-orange-500', bg: 'bg-orange-50' },
                     { label: 'Sugar', val: productDetails.nutriments?.sugars_100g, unit: 'g', color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -280,13 +312,33 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
                   ].map((stat, i) => (
                     <div key={i} className={`${stat.bg} rounded-2xl p-3 flex flex-col items-center justify-center shadow-sm`}>
                       <span className={`text-xs font-bold uppercase tracking-wider ${stat.color} mb-1 opacity-80`}>{stat.label}</span>
-                      <span className="text-lg font-black text-gray-800 leading-none mb-0.5">{stat.val ? Math.round(stat.val) : '-'}</span>
+                      <span className="text-lg font-black text-gray-800 leading-none mb-0.5">{stat.val != null ? Math.round(stat.val) : '-'}</span>
                       <span className="text-[10px] text-gray-400 font-medium">{stat.unit}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Save Form */}
+                {/* Categories & Ingredients */}
+                <div className="space-y-4 mb-6">
+                  {productDetails.categories && (
+                    <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 border border-gray-100">
+                      <span className="font-bold text-gray-800 block mb-1">Categories</span>
+                      <span className="leading-relaxed">
+                        {productDetails.categories.split(',').slice(0, 5).join(', ')}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 border border-gray-100">
+                    <span className="font-bold text-gray-800 block mb-1">Ingredients</span>
+                    <span className="italic leading-relaxed">
+                      {productDetails.ingredients_text ||
+                        (Array.isArray(productDetails.ingredients)
+                          ? productDetails.ingredients.map(i => i.text).join(', ')
+                          : 'Not listed')}
+                    </span>
+                  </div>
+                </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="relative">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Expiry Date</label>
