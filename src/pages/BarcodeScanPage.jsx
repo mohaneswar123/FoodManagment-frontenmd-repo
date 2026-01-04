@@ -108,7 +108,10 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black text-white font-sans overflow-hidden">
+    // Root container: relative positioning to sit INSIDE the main layout, 
+    // but using negative margins to stretch edge-to-edge over the parent padding.
+    // Height calculation ensures it fills the screen minus the navbar.
+    <div className="relative -m-2 sm:-m-4 h-[calc(100vh-70px)] bg-black text-white font-sans overflow-hidden">
 
       {/* BACKGROUND SCANNER Layer - Always rendered to keep camera active/ready */}
       <div className={`absolute inset-0 z-0 transition-all duration-700 ${step > 0 ? 'filter blur-md scale-110 opacity-40' : 'opacity-100'}`}>
@@ -132,25 +135,15 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60 pointer-events-none"></div>
       </div>
 
-      {/* TOP HEADER - Glassmorphism */}
-      <div className="absolute top-0 inset-x-0 z-50 p-6 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg">
-            <span className="text-xl">🥗</span>
-          </div>
-          <div>
-            <h1 className="font-bold text-lg tracking-wide text-white drop-shadow-md">PantryLens</h1>
-            <p className="text-xs text-white/60 font-medium tracking-wider uppercase">AI Food Scanner</p>
-          </div>
-        </div>
-
+      {/* CONTROLS OVERLAY - Glassmorphism */}
+      <div className="absolute top-0 inset-x-0 z-50 p-4 flex justify-end items-center bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
         {step === 0 && (
           <button
             onClick={handleRefresh}
-            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all shadow-lg text-white"
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all shadow-lg text-white pointer-events-auto"
             title="Refresh Camera"
           >
-            <span className="text-xl">🔄</span>
+            <span className="text-lg">🔄</span>
           </button>
         )}
       </div>
