@@ -21,24 +21,41 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
     setIsScanning(true);
   };
 
-  const handleScanSuccess = (result) => {
+  const handleScanSuccess = async (result) => {
     if (result && step === 0) {
-      setBarcode(result.text);
+      const code = result.text;
+      setBarcode(code);
       setIsScanning(false);
-      setStep(1); // Move to confirm step
+
+      // Auto-fetch details
+      try {
+        setErrorMessage('');
+        setStep(1); // temporary loading state or reuse step 1 as loading/error
+        // Note: We used to show a "Found" screen here. Now we want to skip it.
+        // Let's show a loading indicator on Step 1 if we're waiting?
+        // Actually, let's just await.
+
+        const product = await fetchProduct(code);
+        setProductDetails(product);
+        setStep(2); // Jump directly to Save Details
+      } catch (error) {
+        console.error('Fetch Error:', error);
+        setErrorMessage(error.message);
+        setStep(1); // Stay on "Confirm/Error" step if failed, so user can see what happened
+      }
     }
   };
 
   const handleFetchProduct = async () => {
+    // Manual retry handler
     try {
       setErrorMessage('');
       const product = await fetchProduct(barcode);
       setProductDetails(product);
-      setStep(2); // Move to save step
+      setStep(2);
     } catch (error) {
       console.error('Fetch Error:', error);
       setErrorMessage(error.message);
-      // Stay on step 1 but show error, allows retry or manual edit
     }
   };
 
@@ -118,26 +135,33 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
           </div>
         )}
 
-        {/* STEP 1: CONFIRM / FETCH */}
+        {/* STEP 1: CONFIRM / ERROR / LOADING */}
         {step === 1 && (
           <div className="p-8 flex flex-col items-center text-center">
-            <div className="text-6xl mb-4">📦</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Barcode Detected</h2>
+            <div className="text-6xl mb-4">
+              {errorMessage ? '⚠️' : '⏳'}
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              {errorMessage ? 'Product Not Found' : 'Fetching Details...'}
+            </h2>
             <div className="bg-gray-100 px-6 py-3 rounded-full text-xl font-mono font-bold text-gray-700 mb-8 border border-gray-300">
               {barcode}
             </div>
 
-            {errorMessage && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm w-full">
-                ⚠️ {errorMessage}
+            {errorMessage ? (
+              <div className="w-full">
+                <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm w-full">
+                  {errorMessage}
+                </div>
+                <Button onClick={handleFetchProduct} variant="primary" size="large" className="w-full mb-3">
+                  🔄 Retry
+                </Button>
               </div>
+            ) : (
+              <p className="text-gray-500 animate-pulse">Looking up food information...</p>
             )}
 
-            <Button onClick={handleFetchProduct} variant="success" size="large" className="w-full py-4 text-lg shadow-lg mb-3 animate-pulse">
-              🔍 Find Product Details
-            </Button>
-
-            <Button onClick={resetFlow} variant="secondary" className="w-full">
+            <Button onClick={resetFlow} variant="secondary" className="w-full mt-4">
               ❌ Scan Again
             </Button>
           </div>
