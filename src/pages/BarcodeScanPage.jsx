@@ -89,25 +89,41 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
     }
   };
 
+  // Helper to determine Nutriscore color
+  const getNutriscoreColor = (grade) => {
+    const colors = {
+      a: 'bg-green-600',
+      b: 'bg-green-400',
+      c: 'bg-yellow-400',
+      d: 'bg-orange-400',
+      e: 'bg-red-500',
+    };
+    return colors[grade?.toLowerCase()] || 'bg-gray-300';
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-orange-50 to-yellow-50 p-4">
+    <div className="min-h-screen flex flex-col items-center bg-gray-50 text-gray-800 font-sans">
 
-      {/* Header / Title */}
-      <h1 className="text-3xl font-bold text-amber-600 mb-6 flex items-center gap-2">
-        {step === 0 && "📷 Scan a Barcode"}
-        {step === 1 && "🎉 Barcode Found!"}
-        {step === 2 && "📝 Save Details"}
-      </h1>
+      {/* Header */}
+      <div className="w-full bg-white shadow-sm p-4 flex items-center justify-center sticky top-0 z-50">
+        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <span>🔎</span> Smart Food Scanner
+        </h1>
+      </div>
 
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-amber-100">
+      <div className="w-full max-w-md flex-1 flex flex-col p-4">
 
-        {/* STEP 0: SCANNER */}
+        {/* STEP 0: CONTINOUS SCANNER */}
         {step === 0 && (
-          <div className="p-4 flex flex-col items-center relative h-[60vh]">
-            <div className="absolute inset-x-0 top-0 z-10 bg-black/50 text-white text-center py-2 text-sm">
-              Point camera at a barcode
+          <div className="flex-1 flex flex-col relative rounded-3xl overflow-hidden bg-black shadow-2xl">
+            {/* Header Overlay */}
+            <div className="absolute top-0 inset-x-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-6 text-center">
+              <p className="text-white/90 font-medium text-lg">Scan a barcode</p>
+              <p className="text-white/50 text-sm">Hold camera steady</p>
             </div>
-            <div className="flex-1 w-full bg-black rounded-lg overflow-hidden relative">
+
+            {/* Scanner viewfinder */}
+            <div className="flex-1 relative">
               <BarcodeScannerComponent
                 width="100%"
                 height="100%"
@@ -117,94 +133,156 @@ const BarcodeScanPage = ({ userId, isGuest = false }) => {
                 facingMode="environment"
                 videoConstraints={{ width: 1280, height: 720, facingMode: "environment" }}
               />
+
+              {/* Laser Animation & Corners */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-64 h-64 border-2 border-white/30 rounded-3xl relative">
+                  {/* Corners */}
+                  <div className="absolute top-0 left-0 w-6 h-6 border-l-4 border-t-4 border-amber-400 rounded-tl-xl"></div>
+                  <div className="absolute top-0 right-0 w-6 h-6 border-r-4 border-t-4 border-amber-400 rounded-tr-xl"></div>
+                  <div className="absolute bottom-0 left-0 w-6 h-6 border-l-4 border-b-4 border-amber-400 rounded-bl-xl"></div>
+                  <div className="absolute bottom-0 right-0 w-6 h-6 border-r-4 border-b-4 border-amber-400 rounded-br-xl"></div>
+
+                  {/* Scanning Laser */}
+                  <div className="absolute w-full h-1 bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-[scan_2s_infinite]"></div>
+                </div>
+              </div>
             </div>
-            <div className="mt-4 w-full">
-              <p className="text-center text-gray-500 mb-2 text-sm">Or enter manually</p>
+
+            {/* Footer Manual Entry */}
+            <div className="bg-white p-4 pb-8 rounded-t-3xl -mt-6 z-30 relative">
+              <p className="text-center text-gray-400 text-xs mb-3 uppercase tracking-wider font-bold">Or enter manually</p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Type barcode..."
+                  placeholder="e.g. 5449000000996"
                   value={barcode}
                   onChange={setBarcode}
-                  className="flex-1"
+                  className="flex-1 bg-gray-50 border-gray-200"
                 />
-                <Button onClick={() => { if (barcode) setStep(1); }} variant="primary" disabled={!barcode}>
-                  Next
+                <Button onClick={() => { if (barcode) setStep(1); }} variant="primary" disabled={!barcode} className="aspect-square !p-0 w-12 flex items-center justify-center rounded-xl bg-amber-500">
+                  ➜
                 </Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 1: CONFIRM / ERROR / LOADING */}
+        {/* STEP 1: LOADING / ERROR */}
         {step === 1 && (
-          <div className="p-8 flex flex-col items-center text-center">
-            <div className="text-6xl mb-4">
-              {errorMessage ? '⚠️' : '⏳'}
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              {errorMessage ? 'Product Not Found' : 'Fetching Details...'}
-            </h2>
-            <div className="bg-gray-100 px-6 py-3 rounded-full text-xl font-mono font-bold text-gray-700 mb-8 border border-gray-300">
-              {barcode}
-            </div>
-
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
             {errorMessage ? (
-              <div className="w-full">
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm w-full">
-                  {errorMessage}
+              <div className="bg-white p-8 rounded-3xl shadow-xl border border-red-100 w-full animate-in fade-in zoom-in duration-300">
+                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
+                  🤷‍♂️
                 </div>
-                <Button onClick={handleFetchProduct} variant="primary" size="large" className="w-full mb-3">
-                  🔄 Retry
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Not Found</h2>
+                <p className="text-gray-500 mb-6">We couldn't find a product with that barcode.</p>
+
+                <div className="bg-gray-50 p-3 rounded-xl font-mono text-gray-600 mb-6 border border-gray-200">
+                  {barcode}
+                </div>
+
+                <Button onClick={handleFetchProduct} variant="primary" className="w-full mb-3 shadow-red-200 shadow-xl bg-gradient-to-r from-red-500 to-pink-600">
+                  🔄 Retry Search
+                </Button>
+                <Button onClick={resetFlow} variant="ghost" className="w-full">
+                  Cancel
                 </Button>
               </div>
             ) : (
-              <p className="text-gray-500 animate-pulse">Looking up food information...</p>
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+                <p className="text-xl font-semibold text-gray-700">Looking it up...</p>
+                <p className="text-gray-400 text-sm mt-1">Fetching details from global database</p>
+              </div>
             )}
-
-            <Button onClick={resetFlow} variant="secondary" className="w-full mt-4">
-              ❌ Scan Again
-            </Button>
           </div>
         )}
 
-        {/* STEP 2: SAVE */}
-        {step === 2 && (
-          <div className="p-6">
-            {productDetails && (
-              <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 mb-6">
-                <h3 className="font-bold text-xl text-amber-800 mb-1">{productDetails.product_name || 'Unknown Product'}</h3>
-                <p className="text-amber-600 text-sm mb-2">{productDetails.brands}</p>
-                <div className="flex gap-2 text-xs text-gray-500">
-                  <span className="bg-white px-2 py-1 rounded border">{productDetails.quantity || 'Qty: 1'}</span>
-                  <span className="bg-white px-2 py-1 rounded border">{productDetails.nutriments?.energy_100g || '0'} kcal</span>
+        {/* STEP 2: PRODUCT DETAILS & SAVE */}
+        {step === 2 && productDetails && (
+          <div className="flex-1 overflow-y-auto pb-20 animate-in slide-in-from-bottom-10 duration-500">
+            {/* Product Card */}
+            <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-6 border border-gray-100">
+              {/* Image Header */}
+              <div className="h-48 bg-gray-100 relative mb-4">
+                {productDetails.image_front_url ? (
+                  <img src={productDetails.image_front_url} alt={productDetails.product_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 text-5xl">📷</div>
+                )}
+                <div className={`absolute top-4 right-4 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm ${getNutriscoreColor(productDetails.nutriscore_grade)}`}>
+                  Nutriscore {productDetails.nutriscore_grade?.toUpperCase() || '?'}
                 </div>
               </div>
-            )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-gray-700 font-bold mb-2 ml-1">📅 Expiry Date</label>
-                <input
-                  type="date"
-                  value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
-                  required
-                  className="w-full p-4 text-lg border-2 border-gray-300 rounded-xl focus:border-amber-500 focus:ring-amber-500 transition-colors"
-                />
+              <div className="px-6 pb-6">
+                <h2 className="text-2xl font-bold text-gray-800 leading-tight mb-1">{productDetails.product_name || 'Unknown Product'}</h2>
+                <p className="text-gray-500 font-medium mb-4">{productDetails.brands}</p>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-2 mb-6">
+                  <div className="bg-amber-50 p-3 rounded-2xl text-center">
+                    <p className="text-xs text-amber-600 font-bold uppercase">Energy</p>
+                    <p className="font-bold text-gray-800">{productDetails.nutriments?.energy_value || 0}</p>
+                    <p className="text-[10px] text-gray-400">kcal</p>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-2xl text-center">
+                    <p className="text-xs text-blue-600 font-bold uppercase">Sugar</p>
+                    <p className="font-bold text-gray-800">{productDetails.nutriments?.sugars_100g?.toFixed(1) || 0}</p>
+                    <p className="text-[10px] text-gray-400">g/100g</p>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-2xl text-center">
+                    <p className="text-xs text-purple-600 font-bold uppercase">Fat</p>
+                    <p className="font-bold text-gray-800">{productDetails.nutriments?.fat_100g?.toFixed(1) || 0}</p>
+                    <p className="text-[10px] text-gray-400">g/100g</p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+                  <span className="font-bold text-gray-800">Ingredients: </span>
+                  <span className="italic line-clamp-2">
+                    {Array.isArray(productDetails.ingredients)
+                      ? productDetails.ingredients.map(i => i.text).join(', ')
+                      : 'Not listed'}
+                  </span>
+                </div>
               </div>
+            </div>
+
+            {/* Action Form */}
+            <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span>📅</span> Expiry Date
+              </h3>
+              <input
+                type="date"
+                value={expiry}
+                onChange={(e) => setExpiry(e.target.value)}
+                required
+                className="w-full p-4 bg-gray-50 border-none rounded-2xl text-xl font-medium text-gray-700 focus:ring-2 focus:ring-amber-500 outline-none mb-6"
+              />
 
               <div className="flex flex-col gap-3">
-                <Button type="submit" variant="primary" size="large" className="w-full py-4 text-lg shadow-xl font-bold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-none">
-                  💾 Save to Pantry
+                <Button type="submit" variant="success" size="large" className="w-full py-4 text-lg shadow-green-200 shadow-xl font-bold bg-gradient-to-r from-green-500 to-emerald-600">
+                  Add to Pantry
                 </Button>
-                <Button type="button" onClick={resetFlow} variant="ghost" className="text-gray-500">
-                  Start Over
+                <Button type="button" onClick={resetFlow} variant="ghost" className="text-gray-400">
+                  Cancel
                 </Button>
               </div>
             </form>
           </div>
         )}
 
+        <style jsx>{`
+          @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+          }
+        `}</style>
       </div>
     </div>
   );
